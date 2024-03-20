@@ -13,7 +13,7 @@ import java.time.Duration;
 public class Main {
 
     public static void read(){
-        // Cassandra connection parameters
+        // Cassandra connection parameters for local host
         String contactPoint = "127.0.0.1"; // Change this to your Cassandra node's IP
         int port = 9042; // Default Cassandra port
         String keyspace = "sync"; // Keyspace name
