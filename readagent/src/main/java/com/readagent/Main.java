@@ -13,7 +13,16 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class Main {
 
-    public static CqlSession connectToCassandra(String contactPoint, int port, File file) {
+    public static CqlSession connectToCassandra(Dotenv dotenv) {
+        // Load environment variables from .env file
+        
+
+        String contactPoint = dotenv.get("CASSANDRA_CONTACT_POINT");
+        int port = Integer.parseInt(dotenv.get("CASSANDRA_PORT"));
+        
+
+        File file = new File("../resources/reference.conf");
+
         DriverConfigLoader loader = DriverConfigLoader.fromFile(file);
 
         return new CqlSessionBuilder()
@@ -33,17 +42,12 @@ public class Main {
     }
 
     public static void read() {
-        // Load environment variables from .env file
         Dotenv dotenv = Dotenv.configure().load();
 
-        String contactPoint = dotenv.get("CASSANDRA_CONTACT_POINT");
-        int port = Integer.parseInt(dotenv.get("CASSANDRA_PORT"));
         String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
         String table = dotenv.get("CASSANDRA_TABLE");
 
-        File file = new File("../resources/reference.conf");
-
-        try (CqlSession session = connectToCassandra(contactPoint, port, file)) {
+        try (CqlSession session = connectToCassandra(dotenv)){
             System.out.println("Connected to Cassandra.");
 
             String query = String.format("SELECT * FROM %s.%s", keyspace, table);
@@ -51,7 +55,7 @@ public class Main {
             while (true) {
                 ResultSet resultSet = session.execute(query);
                 printData(resultSet);
-                Thread.sleep(2000);
+                Thread.sleep(1000);
                 System.out.println();
                 System.out.println("Reading data from Cassandra...");
                 System.out.println();
