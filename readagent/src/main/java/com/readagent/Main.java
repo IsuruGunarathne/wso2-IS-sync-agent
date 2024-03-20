@@ -8,7 +8,8 @@ import com.datastax.oss.driver.api.core.cql.Row;
 
 import java.io.File;
 import java.net.InetSocketAddress;
-import java.time.Duration;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class Main {
 
@@ -32,12 +33,15 @@ public class Main {
     }
 
     public static void read() {
-        // Cassandra connection parameters
-        String contactPoint = "127.0.0.1"; 
-        int port = 9042; 
-        String keyspace = "sync"; 
-        String table = "user_data"; 
-        File file = new File("/home/isuru/Desktop/IAM/Repositories/wso2-IS-custom-listener/src/main/resources/reference.conf");
+        // Load environment variables from .env file
+        Dotenv dotenv = Dotenv.configure().load();
+
+        String contactPoint = dotenv.get("CASSANDRA_CONTACT_POINT");
+        int port = Integer.parseInt(dotenv.get("CASSANDRA_PORT"));
+        String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
+        String table = dotenv.get("CASSANDRA_TABLE");
+
+        File file = new File("../resources/reference.conf");
 
         try (CqlSession session = connectToCassandra(contactPoint, port, file)) {
             System.out.println("Connected to Cassandra.");
