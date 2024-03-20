@@ -1,13 +1,14 @@
 package com.readagent;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.CqlSessionBuilder;
-import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
-import java.io.File;
 import java.net.InetSocketAddress;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -15,21 +16,34 @@ public class Main {
 
     public static CqlSession connectToCassandra(Dotenv dotenv) {
         // Load environment variables from .env file
-        
+        String cassandraHost = dotenv.get("COSMOS_CONTACT_POINT");
+        int cassandraPort = Integer.parseInt(dotenv.get("COSMOS_PORT"));
 
-        String contactPoint = dotenv.get("CASSANDRA_CONTACT_POINT");
-        int port = Integer.parseInt(dotenv.get("CASSANDRA_PORT"));
-        
+        String cassandraUsername = dotenv.get("COSMOS_USER_NAME");
+        String cassandraPassword = dotenv.get("COSMOS_PASSWORD");   
+        String region = dotenv.get("COSMOS_REGION");     
 
-        File file = new File("../resources/reference.conf");
+        SSLContext sc = null;
+        try{
 
-        DriverConfigLoader loader = DriverConfigLoader.fromFile(file);
+            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
-        return new CqlSessionBuilder()
-                .addContactPoint(new InetSocketAddress(contactPoint, port))
-                .withLocalDatacenter("datacenter1") // Adjust to your local datacenter name
-                .withConfigLoader(loader)
-                .build();
+            final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+            sc = SSLContext.getInstance("TLSv1.2");
+            sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+        }
+        catch (Exception e) {
+            System.out.println("Error creating keystore");
+            e.printStackTrace();
+        }
+
+        CqlSession session = CqlSession.builder().withSslContext(sc)
+                .addContactPoint(new InetSocketAddress(cassandraHost, cassandraPort)).withLocalDatacenter(region)
+                .withAuthCredentials(cassandraUsername, cassandraPassword).build();
+
+        System.out.println("Creating session: " + session.getName());
+        return session;
     }
 
     public static void printData(ResultSet resultSet) {
