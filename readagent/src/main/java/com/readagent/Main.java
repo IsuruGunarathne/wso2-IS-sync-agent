@@ -60,7 +60,7 @@ public class Main {
     }
 
     public static void read() {
-        Dotenv dotenv = Dotenv.configure().load();
+        Dotenv dotenv = Dotenv.load();
 
         String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
         String table = dotenv.get("CASSANDRA_TABLE");
