@@ -1,0 +1,5 @@
+# gitignore for a maven project
+target/
+*.iml
+.idea/
+*.log
