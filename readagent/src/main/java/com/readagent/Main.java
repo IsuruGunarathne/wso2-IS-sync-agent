@@ -23,23 +23,23 @@ public class Main {
         String cassandraPassword = dotenv.get("COSMOS_PASSWORD");   
         String region = dotenv.get("COSMOS_REGION");     
 
-        SSLContext sc = null;
-        try{
+        // SSLContext sc = null;
+        // try{
 
-            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        //     final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
-            final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        //     final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
-            sc = SSLContext.getInstance("TLSv1.2");
-            sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-        }
-        catch (Exception e) {
-            System.out.println("Error creating keystore");
-            e.printStackTrace();
-        }
+        //     sc = SSLContext.getInstance("TLSv1.2");
+        //     sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+        // }
+        // catch (Exception e) {
+        //     System.out.println("Error creating keystore");
+        //     e.printStackTrace();
+        // }
 
-        CqlSession session = CqlSession.builder().withSslContext(sc)
-                .addContactPoint(new InetSocketAddress(cassandraHost, cassandraPort)).withLocalDatacenter(region)
+        CqlSession session = CqlSession.builder()
+                .addContactPoint(new InetSocketAddress(cassandraHost, cassandraPort))
                 .withAuthCredentials(cassandraUsername, cassandraPassword).build();
 
         System.out.println("Creating session: " + session.getName());
