@@ -52,10 +52,12 @@ public class Main {
 
     public static void printData(ResultSet resultSet) {
         for (Row row : resultSet) {
-            // Access individual columns and print their values
-            String userId = row.getString("user_id");
-            String userName = row.getString("user_name");
-            System.out.printf("User ID: %s, User Name: %s%n", userId, userName);
+            // // Access individual columns and print their values
+            // String userId = row.getString("user_id");
+            // String userName = row.getString("username");
+
+            // System.out.printf("User ID: %s, User Name: %s%n", userId, userName);
+            System.out.println(row);
         }
     }
 
