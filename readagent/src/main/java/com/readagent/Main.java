@@ -91,7 +91,7 @@ public class Main {
         try (CqlSession session = connectToCassandra(dotenv)){
             System.out.println("Connected to Cassandra.");
 
-            String query = String.format("SELECT * FROM %s.%s WHERE central_us = false;", keyspace, table);
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = false ALLOW FILTERING;", keyspace, table);
 
             while (true) {
                 ResultSet resultSet = session.execute(query);
