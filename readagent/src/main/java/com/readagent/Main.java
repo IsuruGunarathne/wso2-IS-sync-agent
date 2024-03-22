@@ -77,6 +77,8 @@ public class Main {
 
             System.out.printf("User ID: %s, Username: %s, Credential: %s, Role List: %s, Claims: %s, Profile: %s, Central US: %s, East US: %s\n",
                     user_id, username, credential, role_list, claims, profile, central_us, east_us);
+
+            System.out.println();
         }
     }
 
@@ -89,7 +91,7 @@ public class Main {
         try (CqlSession session = connectToCassandra(dotenv)){
             System.out.println("Connected to Cassandra.");
 
-            String query = String.format("SELECT * FROM %s.%s", keyspace, table);
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = false;", keyspace, table);
 
             while (true) {
                 ResultSet resultSet = session.execute(query);
