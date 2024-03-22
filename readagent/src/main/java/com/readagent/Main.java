@@ -4,6 +4,8 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
+import groovy.transform.builder.InitializerStrategy.SET;
+
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
 
@@ -53,11 +55,28 @@ public class Main {
     public static void printData(ResultSet resultSet) {
         for (Row row : resultSet) {
             // // Access individual columns and print their values
-            // String userId = row.getString("user_id");
-            // String userName = row.getString("username");
+            // CREATE TABLE IF NOT EXISTS users (
+            // user_id TEXT PRIMARY KEY, 
+            // username TEXT,
+            // credential TEXT,
+            // role_list SET<TEXT>,
+            // claims MAP<TEXT, TEXT>,
+            // profile TEXT,
+            // central_us BOOLEAN,
+            // east_us BOOLEAN,);
+            // above is the schema of the table
 
-            // System.out.printf("User ID: %s, User Name: %s%n", userId, userName);
-            System.out.println(row);
+            String user_id = row.getString("user_id");
+            String username = row.getString("username");
+            String credential = row.getString("credential");
+            String role_list = row.getSet("role_list", String.class).toString();
+            String claims = row.getMap("claims", String.class, String.class).toString();
+            String profile = row.getString("profile");
+            boolean central_us = row.getBoolean("central_us");
+            boolean east_us = row.getBoolean("east_us");
+
+            System.out.printf("User ID: %s, Username: %s, Credential: %s, Role List: %s, Claims: %s, Profile: %s, Central US: %s, East US: %s\n",
+                    user_id, username, credential, role_list, claims, profile, central_us, east_us);
         }
     }
 
