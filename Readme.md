@@ -2,4 +2,5 @@
 
 ## Running the application
 
+`mvn clean install` then
 `mvn exec:java -Dexec.mainClass="com.readagent.Main"`

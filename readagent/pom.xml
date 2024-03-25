@@ -12,12 +12,12 @@
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
-            <version>4.1.0</version> <!-- Use the appropriate version -->
+            <version>4.5.1</version> <!-- Use the appropriate version -->
         </dependency>
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
-            <version>2.2.0</version>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 
