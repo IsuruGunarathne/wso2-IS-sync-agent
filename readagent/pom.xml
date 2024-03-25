@@ -7,8 +7,57 @@
     <groupId>com.readagent</groupId>
     <artifactId>readagent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
+    <parent>
+        <groupId>org.wso2.carbon</groupId>
+        <artifactId>carbon-kernel</artifactId>
+        <version>4.6.1</version>
+    </parent>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.4</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Export-Package>
+                            <com class="readagent"></com>  
+                        </Export-Package>
+                        <Import-Package>
+                            com.datastax.oss.driver.api.*,
+                            com.datastax.oss.driver.internal.*,
+                            io.github.cdimascio.dotenv.*
+                            org.wso2.carbon.core.*,
+                            org.osgi.framework,
+                            ;resolution:=optional,
+                            com.datastax.oss.driver.api.core; version="[4.5.0,5.0.0]"
+                            org.apache.axiom.*; version="${axiom.osgi.version.range}",
+                            org.osgi.framework; version="${import.osgi.framework.version.range}",
+                            org.osgi.service.component; version="${import.osgi.service.component.version.range}"
+                        </Import-Package>
+                        <Embed-Dependency>
+                            java-driver-core
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <dependencies>
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.core</artifactId>
+            <version>4.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.eclipse.osgi</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
@@ -17,13 +66,13 @@
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
-            <version>3.0.0</version>
+            <version>2.2.0</version> <!-- Use the appropriate version -->
         </dependency>
     </dependencies>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
 </project>
