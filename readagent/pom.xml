@@ -15,34 +15,57 @@
         <version>4.6.1</version>
     </parent>
 
+    <repositories>
+
+        <repository>
+            <id>wso2-nexus</id>
+            <name>WSO2 internal Repository</name>
+            <url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+                <checksumPolicy>ignore</checksumPolicy>
+            </releases>
+        </repository>
+
+    </repositories>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.7.2</version>
+                <executions>
+                    <execution>
+                        <id>generate-scr-scrdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Export-Package>
-                            <com class="readagent"></com>  
-                        </Export-Package>
+                        <Bundle-Name>${project.artifactId}</Bundle-Name>
+                        <Private-Package>org.wso2.custom.user.operation.event.listener.internal,</Private-Package>
                         <Import-Package>
-                            com.datastax.oss.driver.api.*,
-                            com.datastax.oss.driver.internal.*,
-                            io.github.cdimascio.dotenv.*
                             org.wso2.carbon.core.*,
                             org.osgi.framework,
                             ;resolution:=optional,
-                            com.datastax.oss.driver.api.core; version="[4.5.0,5.0.0]"
                             org.apache.axiom.*; version="${axiom.osgi.version.range}",
                             org.osgi.framework; version="${import.osgi.framework.version.range}",
                             org.osgi.service.component; version="${import.osgi.service.component.version.range}"
                         </Import-Package>
-                        <Embed-Dependency>
-                            java-driver-core
-                        </Embed-Dependency>
+                        <Export-Package>
+                            com.readagent.Readagent
+                        </Export-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
