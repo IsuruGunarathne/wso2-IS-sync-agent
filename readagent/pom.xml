@@ -63,7 +63,8 @@
                             org.osgi.service.component; version="${import.osgi.service.component.version.range}"
                         </Import-Package>
                         <Export-Package>
-                            com.readagent.Readagent
+                            !com.readagent.internal,
+                            com.readagent.*
                         </Export-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
