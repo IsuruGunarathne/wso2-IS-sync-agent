@@ -24,6 +24,7 @@ public class ReadagentServiceComponent {
         log.info("Readagent bundle is activated");
         log.info("-------------------------------------");
         log.info("-------------------------------------");
+        Readagent.read();
     }
     
 }

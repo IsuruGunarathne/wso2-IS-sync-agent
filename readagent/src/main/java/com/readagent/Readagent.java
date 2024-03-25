@@ -4,6 +4,9 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import groovy.transform.builder.InitializerStrategy.SET;
 
 import java.net.InetSocketAddress;
@@ -16,6 +19,7 @@ import javax.net.ssl.TrustManagerFactory;
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class Readagent {
+    private static final Log log = LogFactory.getLog(Readagent.class);
 
     public static CqlSession connectToCassandra(Dotenv dotenv) {
 
@@ -89,6 +93,7 @@ public class Readagent {
         String table = dotenv.get("CASSANDRA_TABLE");
         String region = dotenv.get("COSMOS_REGION");
         
+        
         // set a variable to boolean false if region is central_us
         boolean central_us;
         if (region.equals("Central US")) {
@@ -109,6 +114,7 @@ public class Readagent {
                 System.out.println();
                 System.out.println("Reading data from Cassandra...");
                 System.out.println();
+                log.info("Read data from Cassandra");
             }
 
         } catch (Exception e) {
