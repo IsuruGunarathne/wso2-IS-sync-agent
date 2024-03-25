@@ -87,11 +87,20 @@ public class Main {
 
         String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
         String table = dotenv.get("CASSANDRA_TABLE");
+        String region = dotenv.get("COSMOS_REGION");
+        
+        // set a variable to boolean false if region is central_us
+        boolean central_us;
+        if (region.equals("Central US")) {
+            central_us = false;
+        } else {
+            central_us = true;
+        }
 
         try (CqlSession session = connectToCassandra(dotenv)){
             System.out.println("Connected to Cassandra.");
 
-            String query = String.format("SELECT * FROM %s.%s WHERE central_us = false ALLOW FILTERING;", keyspace, table);
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
 
             while (true) {
                 ResultSet resultSet = session.execute(query);
