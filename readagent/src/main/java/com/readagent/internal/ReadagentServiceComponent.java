@@ -8,6 +8,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import com.readagent.Readagent;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @Component(
     name = "com.readagent",
     immediate = true
@@ -16,6 +19,7 @@ public class ReadagentServiceComponent {
 
     private static final Log log = LogFactory.getLog(Readagent.class);
     private static RealmService realmService;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Activate
     protected void activate(ComponentContext context) {
@@ -24,7 +28,16 @@ public class ReadagentServiceComponent {
         log.info("Readagent bundle is activated");
         log.info("-------------------------------------");
         log.info("-------------------------------------");
-        Readagent.read();
+        
+        // Execute Readagent.read() in a separate thread
+        executorService.execute(() -> {
+            Readagent.read();
+        });
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext context) {
+        executorService.shutdown(); // Shutdown the executor service when the component is deactivated
     }
     
 }
