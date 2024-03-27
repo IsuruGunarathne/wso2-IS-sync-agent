@@ -6,3 +6,8 @@ target/
 *.class
 
 *.env
+
+wso2is-7.0.0.zip
+
+### IS folder
+wso2is-7.0.0

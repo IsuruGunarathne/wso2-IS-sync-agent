@@ -1,8 +1,12 @@
 package com.readagent;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import groovy.transform.builder.InitializerStrategy.SET;
 
@@ -14,8 +18,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import java.io.File;
 
-public class Main {
+public class Readagent {
+    private static final Log log = LogFactory.getLog(Readagent.class);
 
     public static CqlSession connectToCassandra(Dotenv dotenv) {
 
@@ -26,6 +32,14 @@ public class Main {
         String cassandraUsername = dotenv.get("COSMOS_USER_NAME");
         String cassandraPassword = dotenv.get("COSMOS_PASSWORD");   
         String region = dotenv.get("COSMOS_REGION");     
+        String ref_path = dotenv.get("COSMOS_REF_PATH");
+
+        // put the absolute path to the reference.conf file here
+        File file = new File(ref_path);
+        // print the content of the file
+        System.out.println("File path: " + file.getAbsolutePath());
+        System.out.println("File exists: " + file.exists());
+        DriverConfigLoader loader = DriverConfigLoader.fromFile(file);
 
         SSLContext sc = null;
         try{
@@ -46,6 +60,7 @@ public class Main {
 
         CqlSession session = CqlSession.builder().withSslContext(sc)
         .addContactPoint(new InetSocketAddress(cassandraHost, cassandraPort)).withLocalDatacenter(region)
+        .withConfigLoader(loader)
         .withAuthCredentials(cassandraUsername, cassandraPassword).build();
 
         System.out.println("Creating session: " + session.getName());
@@ -89,6 +104,7 @@ public class Main {
         String table = dotenv.get("CASSANDRA_TABLE");
         String region = dotenv.get("COSMOS_REGION");
         
+        
         // set a variable to boolean false if region is central_us
         boolean central_us;
         if (region.equals("Central US")) {
@@ -98,7 +114,7 @@ public class Main {
         }
 
         try (CqlSession session = connectToCassandra(dotenv)){
-            System.out.println("Connected to Cassandra.");
+            log.info("Connected to Cassandra. Through Read Agent");
 
             String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
 
@@ -106,9 +122,10 @@ public class Main {
                 ResultSet resultSet = session.execute(query);
                 printData(resultSet);
                 Thread.sleep(1000);
-                System.out.println();
-                System.out.println("Reading data from Cassandra...");
-                System.out.println();
+                log.info("");
+                log.info("Reading data from Cassandra...");
+                log.info("");
+                log.info("Read data from Cassandra");
             }
 
         } catch (Exception e) {
@@ -116,6 +133,7 @@ public class Main {
         }
     }
     public static void main(String[] args) {
+        System.out.println("Starting Read Agent...");
         read();
     }
 
