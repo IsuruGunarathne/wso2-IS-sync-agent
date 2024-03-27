@@ -9,6 +9,10 @@ import org.wso2.carbon.user.api.RealmConfiguration;
 
 public class CustomJDBCUserStoreManager extends UniqueIDJDBCUserStoreManager {
     
+    public CustomJDBCUserStoreManager() {
+        super();
+    }
+
     public CustomJDBCUserStoreManager(RealmConfiguration realmConfig, int tenantId) throws UserStoreException {
 
         super(realmConfig, tenantId);

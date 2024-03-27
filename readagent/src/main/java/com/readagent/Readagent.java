@@ -12,6 +12,7 @@ import groovy.transform.builder.InitializerStrategy.SET;
 
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.util.Map;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -138,6 +139,26 @@ public class Readagent {
             System.err.println("Error: " + e);
         }
     }
+
+    public static void writeToDB(String UUID, String userName, Object credential, String[] roleList, Map<String, String> claims, String profileName){
+        if (customJDBCUserStoreManager==null) {
+            System.out.println("javaURLContextFactory is null");
+            customJDBCUserStoreManager = new CustomJDBCUserStoreManager();
+            // constructor should have realm and stuff
+        }
+
+        try {
+            if (customJDBCUserStoreManager.doCheckExistingUserWithID(UUID)) {
+                System.out.println("User already exists in the system. Updating user...");
+                customJDBCUserStoreManager.doAddUserWithCustomID(UUID, userName, credential, roleList, claims, profileName, false);
+            } else {
+                System.out.println("User does not exist in the system. Adding user...");
+            }
+        } catch (UserStoreException e) {
+            System.out.println("Error adding user: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         System.out.println("Starting Read Agent...");
         read();
