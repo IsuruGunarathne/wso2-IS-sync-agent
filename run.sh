@@ -27,4 +27,7 @@ cd ..
 # copy libraries from libraries directory to the lib folder
 cp libraries/* wso2is-7.0.0/repository/components/lib
 
+# copy /readagent/.env to /wso2is-7.0.0
+cp readagent/.env wso2is-7.0.0
+
 ./wso2is-7.0.0/bin/wso2server.sh
