@@ -20,8 +20,14 @@ import javax.net.ssl.TrustManagerFactory;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
 
+import org.wso2.carbon.user.core.common.User;
+import org.wso2.carbon.user.core.UserStoreException;
+
+import com.readagent.CustomJDBCUserStoreManager;
+
 public class Readagent {
     private static final Log log = LogFactory.getLog(Readagent.class);
+    private static CustomJDBCUserStoreManager customJDBCUserStoreManager;
 
     public static CqlSession connectToCassandra(Dotenv dotenv) {
 
