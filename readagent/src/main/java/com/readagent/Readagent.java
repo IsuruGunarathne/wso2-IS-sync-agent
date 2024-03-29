@@ -7,6 +7,9 @@ import com.datastax.oss.driver.api.core.cql.Row;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.osgi.framework.internal.core.SystemBundleActivator;
+
+import com.readagent.internal.SyncToolServiceDataHolder;
 
 import groovy.transform.builder.InitializerStrategy.SET;
 
@@ -22,7 +25,11 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
 
 import org.wso2.carbon.user.core.common.User;
+import org.wso2.carbon.user.core.jdbc.JDBCRealmConstants;
+import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.user.api.RealmConfiguration;
 import org.wso2.carbon.user.core.UserStoreException;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import com.readagent.CustomJDBCUserStoreManager;
 
@@ -97,6 +104,8 @@ public class Readagent {
             boolean central_us = row.getBoolean("central_us");
             boolean east_us = row.getBoolean("east_us");
 
+            writeToDB(user_id, username, credential, role_list.split(","), row.getMap("claims", String.class, String.class), profile);
+
             System.out.printf("User ID: %s, Username: %s, Credential: %s, Role List: %s, Claims: %s, Profile: %s, Central US: %s, East US: %s\n",
                     user_id, username, credential, role_list, claims, profile, central_us, east_us);
 
@@ -141,18 +150,57 @@ public class Readagent {
     }
 
     public static void writeToDB(String UUID, String userName, Object credential, String[] roleList, Map<String, String> claims, String profileName){
-        if (customJDBCUserStoreManager==null) {
-            System.out.println("javaURLContextFactory is null");
-            customJDBCUserStoreManager = new CustomJDBCUserStoreManager();
-            // constructor should have realm and stuff
+        // if (customJDBCUserStoreManager==null) {
+        //     System.out.println("javaURLContextFactory is null");
+        //     customJDBCUserStoreManager = new CustomJDBCUserStoreManager();
+        //     // constructor should have realm and stuff
+        // }
+
+        try {
+            RealmService realmService = SyncToolServiceDataHolder.getInstance().getRealmService();
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println("Realm Service: "+realmService.getTenantManager().getTenantId("carbon.super"));
+            System.out.println("Tenant User Realm: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration());
+            System.out.println("Driver name: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperty(JDBCRealmConstants.DRIVER_NAME));
+            // print all properties in the realm configuration
+            System.out.println("Realm Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties());
+            // print all user store properties
+            System.out.println("User Store Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperties());
+            realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties().put("dataSource", "jdbc/SHARED_DB");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            System.out.println(" ");
+            if(customJDBCUserStoreManager==null){
+                realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties();
+                customJDBCUserStoreManager = new CustomJDBCUserStoreManager(realmService.getTenantUserRealm(-1234).getRealmConfiguration(), realmService.getTenantManager().getTenantId("carbon.super"));
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating JDBCUserStoreManager: " + e.getMessage());
+            // print stack trace
+            e.printStackTrace();
         }
+
 
         try {
             if (customJDBCUserStoreManager.doCheckExistingUserWithID(UUID)) {
                 System.out.println("User already exists in the system. Updating user...");
-                customJDBCUserStoreManager.doAddUserWithCustomID(UUID, userName, credential, roleList, claims, profileName, false);
             } else {
                 System.out.println("User does not exist in the system. Adding user...");
+                customJDBCUserStoreManager.doAddUserWithCustomID(UUID, userName, credential, roleList, claims, profileName, false);
             }
         } catch (UserStoreException e) {
             System.out.println("Error adding user: " + e.getMessage());

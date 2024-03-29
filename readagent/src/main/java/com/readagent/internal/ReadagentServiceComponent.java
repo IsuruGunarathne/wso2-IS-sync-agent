@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
 public class ReadagentServiceComponent {
 
     private static final Log log = LogFactory.getLog(Readagent.class);
-    private static RealmService realmService;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Activate
@@ -31,6 +30,12 @@ public class ReadagentServiceComponent {
         
         // Execute Readagent.read() in a separate thread
         executorService.execute(() -> {
+            // sleep for 1 minutes
+            try {
+                Thread.sleep(45000);
+            } catch (InterruptedException e) {
+                log.error("Error while sleeping the thread", e);
+            }
             Readagent.read();
         });
     }
@@ -40,4 +45,22 @@ public class ReadagentServiceComponent {
         executorService.shutdown(); // Shutdown the executor service when the component is deactivated
     }
     
+    @Reference(
+        name = "user.realmservice.default",
+        service = RealmService.class,
+        cardinality = ReferenceCardinality.MANDATORY,
+        policy = ReferencePolicy.DYNAMIC,
+        unbind = "unsetRealmService"
+    )
+    protected void setRealmService(RealmService realmService) {
+        SyncToolServiceDataHolder.getInstance().setRealmService(realmService);;
+    }
+
+    protected void unsetRealmService(RealmService realmService) {
+        SyncToolServiceDataHolder.getInstance().setRealmService(null);
+    }
+    
+    public static RealmService getRealmService() {
+        return SyncToolServiceDataHolder.getInstance().getRealmService();
+    }
 }
