@@ -171,10 +171,10 @@ public class Readagent {
             System.out.println("Tenant User Realm: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration());
             System.out.println("Driver name: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperty(JDBCRealmConstants.DRIVER_NAME));
             // print all properties in the realm configuration
-            System.out.println("Realm Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties());
+            // System.out.println("Realm Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties());
             // print all user store properties
-            System.out.println("User Store Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperties());
-            realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties().put("dataSource", "jdbc/SHARED_DB");
+            // System.out.println("User Store Properties: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperties());
+            // realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties();
             System.out.println(" ");
             System.out.println(" ");
             System.out.println(" ");
@@ -185,7 +185,7 @@ public class Readagent {
             System.out.println(" ");
             System.out.println(" ");
             if(customJDBCUserStoreManager==null){
-                realmService.getTenantUserRealm(-1234).getRealmConfiguration().getRealmProperties();
+                realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperties().put("dataSource", "jdbc/SHARED_DB");
                 customJDBCUserStoreManager = new CustomJDBCUserStoreManager(realmService.getTenantUserRealm(-1234).getRealmConfiguration(), realmService.getTenantManager().getTenantId("carbon.super"));
             }
         } catch (Exception e) {
