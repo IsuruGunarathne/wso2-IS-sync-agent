@@ -28,6 +28,7 @@ public class ReadagentServiceComponent {
         log.info("-------------------------------------");
         log.info("-------------------------------------");
         
+        Readagent.init();
         // Execute Readagent.read() in a separate thread
         executorService.execute(() -> {
             // sleep for 1 minutes

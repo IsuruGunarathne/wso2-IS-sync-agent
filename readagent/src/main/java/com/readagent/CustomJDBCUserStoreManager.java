@@ -6,6 +6,10 @@ import org.wso2.carbon.user.core.UserStoreException;
 import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.jdbc.UniqueIDJDBCUserStoreManager;
 import org.wso2.carbon.user.api.RealmConfiguration;
+import org.wso2.carbon.user.core.claim.ClaimManager;
+import org.wso2.carbon.user.core.profile.ProfileConfigurationManager;
+import org.wso2.carbon.user.core.UserRealm;
+
 
 public class CustomJDBCUserStoreManager extends UniqueIDJDBCUserStoreManager {
     
@@ -16,6 +20,13 @@ public class CustomJDBCUserStoreManager extends UniqueIDJDBCUserStoreManager {
     public CustomJDBCUserStoreManager(RealmConfiguration realmConfig, int tenantId) throws UserStoreException {
 
         super(realmConfig, tenantId);
+    }
+
+    public CustomJDBCUserStoreManager(RealmConfiguration realmConfig, Map<String, Object> properties,
+    ClaimManager claimManager, ProfileConfigurationManager profileManager, UserRealm realm, Integer tenantId)
+    throws UserStoreException {
+
+        super(realmConfig, properties, claimManager, profileManager, realm, tenantId);
     }
 
     public User doAddUserWithCustomID(String UUID, String userName, Object credential, String[] roleList, Map<String, String> claims,
