@@ -152,13 +152,42 @@ public class Readagent {
         }
     }
 
+    public static void updateRoles(ResultSet resultSet) {
+        for (Row row : resultSet) {
+            String user_id = row.getString("user_id");
+            // make role_list from the field role_name, which is a string
+            String[] role_list = row.getString("role_name").split(",");
+
+
+            // empty role list
+            String [] empty_role_list = new String[0];
+            System.out.println("User ID: " + user_id);
+            System.out.println("Role List: " + role_list);
+            try {
+                jdbcUserStoreManager.doUpdateRoleListOfUserWithID(user_id, empty_role_list, role_list);
+            } catch (Exception e) {
+                System.out.println("Error updating roles: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void printRoles(ResultSet resultSet) {
+        for (Row row : resultSet) {
+            String user_id = row.getString("user_id");
+            String[] role_list = row.getString("role_name").split(",");
+            System.out.println("User ID: " + user_id);
+            System.out.println("Role List: " + role_list[0]);          
+        }
+    }
+
     public static void read() {
         Dotenv dotenv = Dotenv.load();
 
         String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
         String table = dotenv.get("CASSANDRA_TABLE");
         String region = dotenv.get("COSMOS_REGION");
-        
+        String role_table = dotenv.get("CASSANDRA_ROLE_TABLE");
         
         // set a variable to boolean false if region is central_us
         boolean central_us;
@@ -172,10 +201,14 @@ public class Readagent {
             log.info("Connected to Cassandra. Through Read Agent");
 
             String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
-
+            String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, true);
+            // update the region to centra_us variable for production use
             while (true) {
                 ResultSet resultSet = session.execute(query);
                 writeToDB(resultSet);
+                ResultSet roleResultSet = session.execute(role_query);
+                // updateRoles(roleResultSet);
+                printRoles(roleResultSet);
                 Thread.sleep(1000);
                 log.info("");
                 log.info("Reading data from Cassandra...");
