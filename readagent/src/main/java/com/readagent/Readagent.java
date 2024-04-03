@@ -7,11 +7,16 @@ import com.datastax.oss.driver.api.core.cql.Row;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.osgi.framework.internal.core.SystemBundleActivator;
+
+import com.readagent.internal.SyncToolServiceDataHolder;
 
 import groovy.transform.builder.InitializerStrategy.SET;
 
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -20,8 +25,46 @@ import javax.net.ssl.TrustManagerFactory;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
 
+import org.wso2.carbon.user.core.common.User;
+import org.wso2.carbon.user.core.jdbc.JDBCRealmConstants;
+import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.user.api.RealmConfiguration;
+import org.wso2.carbon.user.core.UserStoreException;
+import org.wso2.carbon.user.core.claim.inmemory.InMemoryClaimManager;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.user.core.claim.ClaimManager;
+import org.wso2.carbon.user.core.UserRealm;
+
+import com.readagent.CustomJDBCUserStoreManager;
+
 public class Readagent {
     private static final Log log = LogFactory.getLog(Readagent.class);
+    private static CustomJDBCUserStoreManager jdbcUserStoreManager;
+    private static RealmService realmService;
+
+    public static void init() {
+        realmService = SyncToolServiceDataHolder.getInstance().getRealmService();
+        try{
+
+            if(jdbcUserStoreManager==null){
+                // realmService.getTenantUserRealm(-1234).getRealmConfiguration().getUserStoreProperties().put("dataSource", "jdbc/SHARED_DB");
+
+                RealmConfiguration realmConfig = realmService.getTenantUserRealm(-1234).getRealmConfiguration();
+                Map<String, Object> properties = new HashMap<String, Object>();
+                ClaimManager claimManager = new InMemoryClaimManager();
+                UserRealm realm = (UserRealm) realmService.getTenantUserRealm(-1234);
+                Integer tenantId = new Integer(realmService.getTenantManager().getTenantId("carbon.super"));
+
+                jdbcUserStoreManager = new CustomJDBCUserStoreManager(realmConfig, properties, claimManager, null, realm, tenantId);
+                System.out.println("Realm Service: "+realmService.getTenantManager().getTenantId("carbon.super"));
+                System.out.println("Tenant User Realm: "+realmService.getTenantUserRealm(-1234).getRealmConfiguration());
+                System.out.println(jdbcUserStoreManager.getClaimManager());
+            }
+        }catch(Exception e){
+            System.out.println("Error creating JDBCUserStoreManager: "+e.getMessage());
+            e.printStackTrace();
+        }   
+    }
 
     public static CqlSession connectToCassandra(Dotenv dotenv) {
 
@@ -67,33 +110,45 @@ public class Readagent {
         return session;
     }
 
-    public static void printData(ResultSet resultSet) {
+    public static void writeToDB(ResultSet resultSet) {
         for (Row row : resultSet) {
-            // // Access individual columns and print their values
-            // CREATE TABLE IF NOT EXISTS users (
-            // user_id TEXT PRIMARY KEY, 
-            // username TEXT,
-            // credential TEXT,
-            // role_list SET<TEXT>,
-            // claims MAP<TEXT, TEXT>,
-            // profile TEXT,
-            // central_us BOOLEAN,
-            // east_us BOOLEAN,);
-            // above is the schema of the table
 
             String user_id = row.getString("user_id");
             String username = row.getString("username");
             String credential = row.getString("credential");
-            String role_list = row.getSet("role_list", String.class).toString();
+            String[] role_list = row.getSet("role_list", String.class).toArray(new String[0]);
+            Map <String, String> claimsMap = row.getMap("claims", String.class, String.class);
             String claims = row.getMap("claims", String.class, String.class).toString();
             String profile = row.getString("profile");
             boolean central_us = row.getBoolean("central_us");
             boolean east_us = row.getBoolean("east_us");
-
-            System.out.printf("User ID: %s, Username: %s, Credential: %s, Role List: %s, Claims: %s, Profile: %s, Central US: %s, East US: %s\n",
-                    user_id, username, credential, role_list, claims, profile, central_us, east_us);
-
+            
             System.out.println();
+            System.out.println();
+
+            System.out.println("User ID: " + user_id);
+            System.out.println("Username: " + username);
+            System.out.println("Credential: " + credential);
+            System.out.println("Role List: " + role_list);
+            System.out.println("claimsMap: " + claimsMap);
+            System.out.println("Claims: " + claims);
+            System.out.println("Profile: " + profile);
+            System.out.println("Central US: " + central_us);
+            System.out.println("East US: " + east_us);
+            
+            System.out.println();
+
+            try {
+                if (!jdbcUserStoreManager.doCheckExistingUserWithID(user_id)) {
+                    System.out.println("User does not exist in the system. Adding user...");
+                    jdbcUserStoreManager.doAddUserWithCustomID(user_id, username, credential, role_list, claimsMap, profile, false);
+                } else {
+                    System.out.println("User already exists in the system...");
+                }
+            } catch (Exception e) {
+                System.out.println("Error adding user: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -120,7 +175,7 @@ public class Readagent {
 
             while (true) {
                 ResultSet resultSet = session.execute(query);
-                printData(resultSet);
+                writeToDB(resultSet);
                 Thread.sleep(1000);
                 log.info("");
                 log.info("Reading data from Cassandra...");
@@ -132,6 +187,8 @@ public class Readagent {
             System.err.println("Error: " + e);
         }
     }
+   
+
     public static void main(String[] args) {
         System.out.println("Starting Read Agent...");
         read();
