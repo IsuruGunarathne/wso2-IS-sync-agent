@@ -201,14 +201,14 @@ public class Readagent {
             log.info("Connected to Cassandra. Through Read Agent");
 
             String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
-            String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, true);
+            String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, central_us);
             // update the region to centra_us variable for production use
             while (true) {
                 ResultSet resultSet = session.execute(query);
                 writeToDB(resultSet);
                 ResultSet roleResultSet = session.execute(role_query);
-                // updateRoles(roleResultSet);
-                printRoles(roleResultSet);
+                updateRoles(roleResultSet);
+                // printRoles(roleResultSet);
                 Thread.sleep(1000);
                 log.info("");
                 log.info("Reading data from Cassandra...");
