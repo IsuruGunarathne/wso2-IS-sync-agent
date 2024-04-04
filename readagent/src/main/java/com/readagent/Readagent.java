@@ -2,8 +2,10 @@ package com.readagent;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ public class Readagent {
     private static final Log log = LogFactory.getLog(Readagent.class);
     private static CustomJDBCUserStoreManager jdbcUserStoreManager;
     private static RealmService realmService;
+    private static CqlSession session;
 
     public static void init() {
         realmService = SyncToolServiceDataHolder.getInstance().getRealmService();
@@ -149,6 +152,103 @@ public class Readagent {
                 System.out.println("Error adding user: " + e.getMessage());
                 e.printStackTrace();
             }
+            finally {
+
+                // Delete the user record from Cosmos
+                deleteUserRecord(user_id);
+
+            }
+        }
+    }
+
+    public static void updateRoles(ResultSet resultSet) {
+        for (Row row : resultSet) {
+            String user_id = row.getString("user_id");
+            // make role_list from the field role_name, which is a string
+            String[] role_list = row.getString("role_name").split(",");
+
+
+            // empty role list
+            String [] empty_role_list = new String[0];
+            System.out.println("User ID: " + user_id);
+            System.out.println("Role List: " + role_list);
+            try {
+                jdbcUserStoreManager.doUpdateRoleListOfUserWithID(user_id, empty_role_list, role_list);
+            } catch (Exception e) {
+                System.out.println("Error updating roles: " + e.getMessage());
+                e.printStackTrace();
+            }
+            finally {
+                // Delete the role record from Cosmos
+                deleteRoleRecord(user_id, row.getString("role_name"));
+            }
+        }
+    }
+
+    public static void printRoles(ResultSet resultSet) {
+        for (Row row : resultSet) {
+            String user_id = row.getString("user_id");
+            String[] role_list = row.getString("role_name").split(",");
+            System.out.println("User ID: " + user_id);
+            System.out.println("Role List: " + role_list[0]);          
+        }
+    }
+
+    public static void deleteUserRecord(String user_id) {
+
+        Dotenv dotenv = Dotenv.load();
+
+        String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
+        String table = dotenv.get("CASSANDRA_TABLE");
+        String region = dotenv.get("COSMOS_REGION");
+
+        String user_query = String.format("DELETE FROM %s.%s WHERE central_us = ? AND east_us = ? AND user_id = ?", keyspace, table);
+        boolean isCentral = region.equals("Central US");
+        
+        try {
+
+            // Prepare the delete query
+            PreparedStatement preparedStatement = session.prepare(user_query);
+
+            // Bind the parameters to the query
+            BoundStatement boundStatement = preparedStatement.bind(!isCentral, isCentral, user_id);
+
+            // Delete the user from Cosmos
+            session.execute(boundStatement);
+
+
+        } catch (Exception e) {
+            log.error("Error deleting user: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteRoleRecord(String user_id, String role_name) {
+
+        Dotenv dotenv = Dotenv.load();
+
+        String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
+        String table = dotenv.get("CASSANDRA_ROLE_TABLE");
+        String region = dotenv.get("COSMOS_REGION");
+        String deleteRoleQuery = "DELETE FROM " + keyspace + "." + table + " WHERE role_name = ? AND central_us = ? AND east_us = ? AND user_id = ? ;";
+
+        // Check if the data is written from Central US
+        boolean isCentral = region.equals("Central US");
+
+        try {
+            
+            // Prepare the delete query
+            PreparedStatement preparedStatement = session.prepare(deleteRoleQuery);
+
+            // Bind the parameters to the query
+            BoundStatement boundStatement = preparedStatement.bind(role_name, !isCentral, isCentral, user_id);
+
+            // Delete the user from Cosmos
+            session.execute(boundStatement);
+
+        } catch (Exception e) {
+            log.error("Error deleting user from Cosmos: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -158,7 +258,7 @@ public class Readagent {
         String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
         String table = dotenv.get("CASSANDRA_TABLE");
         String region = dotenv.get("COSMOS_REGION");
-        
+        String role_table = dotenv.get("CASSANDRA_ROLE_TABLE");
         
         // set a variable to boolean false if region is central_us
         boolean central_us;
@@ -167,15 +267,20 @@ public class Readagent {
         } else {
             central_us = true;
         }
-
-        try (CqlSession session = connectToCassandra(dotenv)){
+        boolean do_delete = false;
+        session = connectToCassandra(dotenv);
+        try {
             log.info("Connected to Cassandra. Through Read Agent");
 
-            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
-
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s AND do_delete = %s ALLOW FILTERING;", keyspace, table, central_us, do_delete);
+            String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, central_us);
+            // update the region to centra_us variable for production use
             while (true) {
                 ResultSet resultSet = session.execute(query);
                 writeToDB(resultSet);
+                ResultSet roleResultSet = session.execute(role_query);
+                updateRoles(roleResultSet);
+                // printRoles(roleResultSet);
                 Thread.sleep(1000);
                 log.info("");
                 log.info("Reading data from Cassandra...");
