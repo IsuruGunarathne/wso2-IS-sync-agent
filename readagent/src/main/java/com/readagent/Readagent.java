@@ -178,6 +178,10 @@ public class Readagent {
                 System.out.println("Error updating roles: " + e.getMessage());
                 e.printStackTrace();
             }
+            finally {
+                // Delete the role record from Cosmos
+                deleteRoleRecord(user_id, row.getString("role_name"));
+            }
         }
     }
 
@@ -215,6 +219,35 @@ public class Readagent {
 
         } catch (Exception e) {
             log.error("Error deleting user: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteRoleRecord(String user_id, String role_name) {
+
+        Dotenv dotenv = Dotenv.load();
+
+        String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
+        String table = dotenv.get("CASSANDRA_ROLE_TABLE");
+        String region = dotenv.get("COSMOS_REGION");
+        String deleteRoleQuery = "DELETE FROM " + keyspace + "." + table + " WHERE role_name = ? AND central_us = ? AND east_us = ? AND user_id = ? ;";
+
+        // Check if the data is written from Central US
+        boolean isCentral = region.equals("Central US");
+
+        try {
+            
+            // Prepare the delete query
+            PreparedStatement preparedStatement = session.prepare(deleteRoleQuery);
+
+            // Bind the parameters to the query
+            BoundStatement boundStatement = preparedStatement.bind(role_name, !isCentral, isCentral, user_id);
+
+            // Delete the user from Cosmos
+            session.execute(boundStatement);
+
+        } catch (Exception e) {
+            log.error("Error deleting user from Cosmos: " + e.getMessage());
             e.printStackTrace();
         }
     }
