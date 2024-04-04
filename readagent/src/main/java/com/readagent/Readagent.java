@@ -196,11 +196,11 @@ public class Readagent {
         } else {
             central_us = true;
         }
-
+        boolean do_delete = false;
         try (CqlSession session = connectToCassandra(dotenv)){
             log.info("Connected to Cassandra. Through Read Agent");
 
-            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s AND do_delete = %s ALLOW FILTERING;", keyspace, table, central_us, do_delete);
             String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, central_us);
             // update the region to centra_us variable for production use
             while (true) {
