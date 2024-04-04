@@ -2,8 +2,10 @@ package com.readagent;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ public class Readagent {
     private static final Log log = LogFactory.getLog(Readagent.class);
     private static CustomJDBCUserStoreManager jdbcUserStoreManager;
     private static RealmService realmService;
+    private static CqlSession session;
 
     public static void init() {
         realmService = SyncToolServiceDataHolder.getInstance().getRealmService();
@@ -149,6 +152,12 @@ public class Readagent {
                 System.out.println("Error adding user: " + e.getMessage());
                 e.printStackTrace();
             }
+            finally {
+
+                // Delete the user record from Cosmos
+                deleteUserRecord(user_id);
+
+            }
         }
     }
 
@@ -181,6 +190,35 @@ public class Readagent {
         }
     }
 
+    public static void deleteUserRecord(String user_id) {
+
+        Dotenv dotenv = Dotenv.load();
+
+        String keyspace = dotenv.get("CASSANDRA_KEYSPACE");
+        String table = dotenv.get("CASSANDRA_TABLE");
+        String region = dotenv.get("COSMOS_REGION");
+
+        String user_query = String.format("DELETE FROM %s.%s WHERE central_us = ? AND east_us = ? AND user_id = ?", keyspace, table);
+        boolean isCentral = region.equals("Central US");
+        
+        try {
+
+            // Prepare the delete query
+            PreparedStatement preparedStatement = session.prepare(user_query);
+
+            // Bind the parameters to the query
+            BoundStatement boundStatement = preparedStatement.bind(!isCentral, isCentral, user_id);
+
+            // Delete the user from Cosmos
+            session.execute(boundStatement);
+
+
+        } catch (Exception e) {
+            log.error("Error deleting user: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public static void read() {
         Dotenv dotenv = Dotenv.load();
 
@@ -197,7 +235,8 @@ public class Readagent {
             central_us = true;
         }
         boolean do_delete = false;
-        try (CqlSession session = connectToCassandra(dotenv)){
+        session = connectToCassandra(dotenv);
+        try {
             log.info("Connected to Cassandra. Through Read Agent");
 
             String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s AND do_delete = %s ALLOW FILTERING;", keyspace, table, central_us, do_delete);
