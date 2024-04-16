@@ -166,7 +166,7 @@ public class Readagent {
             finally {
 
                 // Delete the user record from Cosmos
-                deleteUserRecord(user_id);
+                deleteUserRecord(user_id,do_delete);
 
             }
         }
@@ -205,7 +205,7 @@ public class Readagent {
         }
     }
 
-    public static void deleteUserRecord(String user_id) {
+    public static void deleteUserRecord(String user_id, boolean do_delete) {
 
         Dotenv dotenv = Dotenv.load();
 
@@ -213,7 +213,7 @@ public class Readagent {
         String table = dotenv.get("CASSANDRA_TABLE");
         String region = dotenv.get("COSMOS_REGION");
 
-        String user_query = String.format("DELETE FROM %s.%s WHERE central_us = ? AND east_us = ? AND user_id = ?", keyspace, table);
+        String user_query = String.format("DELETE FROM %s.%s WHERE central_us = ? AND east_us = ? AND user_id = ? AND do_delete = ?", keyspace, table);
         boolean isCentral = region.equals("Central US");
         
         try {
@@ -222,7 +222,7 @@ public class Readagent {
             PreparedStatement preparedStatement = session.prepare(user_query);
 
             // Bind the parameters to the query
-            BoundStatement boundStatement = preparedStatement.bind(!isCentral, isCentral, user_id);
+            BoundStatement boundStatement = preparedStatement.bind(!isCentral, isCentral, user_id, do_delete);
 
             // Delete the user from Cosmos
             session.execute(boundStatement);
