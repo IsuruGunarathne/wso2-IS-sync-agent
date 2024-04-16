@@ -125,7 +125,8 @@ public class Readagent {
             String profile = row.getString("profile");
             boolean central_us = row.getBoolean("central_us");
             boolean east_us = row.getBoolean("east_us");
-            
+            boolean do_delete = row.getBoolean("do_delete");
+
             System.out.println();
             System.out.println();
 
@@ -142,11 +143,21 @@ public class Readagent {
             System.out.println();
 
             try {
-                if (!jdbcUserStoreManager.doCheckExistingUserWithID(user_id)) {
-                    System.out.println("User does not exist in the system. Adding user...");
-                    jdbcUserStoreManager.doAddUserWithCustomID(user_id, username, credential, role_list, claimsMap, profile, false);
-                } else {
-                    System.out.println("User already exists in the system...");
+                if (do_delete){
+                    if (jdbcUserStoreManager.doCheckExistingUserWithID(user_id)) {
+                        log.info("User exists in the system. Deleting user...");
+                        log.info("User ID: " + user_id);
+                        jdbcUserStoreManager.doDeleteUserWithID(user_id);
+                    } else {
+                        log.info("User does not exist in the system...");
+                    }
+                }else{
+                    if (!jdbcUserStoreManager.doCheckExistingUserWithID(user_id)) {
+                        System.out.println("User does not exist in the system. Adding user...");
+                        jdbcUserStoreManager.doAddUserWithCustomID(user_id, username, credential, role_list, claimsMap, profile, false);
+                    } else {
+                        System.out.println("User already exists in the system...");
+                    }
                 }
             } catch (Exception e) {
                 System.out.println("Error adding user: " + e.getMessage());
@@ -267,12 +278,11 @@ public class Readagent {
         } else {
             central_us = true;
         }
-        boolean do_delete = false;
         session = connectToCassandra(dotenv);
         try {
             log.info("Connected to Cassandra. Through Read Agent");
 
-            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s AND do_delete = %s ALLOW FILTERING;", keyspace, table, central_us, do_delete);
+            String query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, table, central_us);
             String role_query = String.format("SELECT * FROM %s.%s WHERE central_us = %s ALLOW FILTERING;", keyspace, role_table, central_us);
             // update the region to centra_us variable for production use
             while (true) {
