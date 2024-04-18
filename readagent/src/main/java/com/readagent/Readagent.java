@@ -292,10 +292,10 @@ public class Readagent {
                 updateRoles(roleResultSet);
                 // printRoles(roleResultSet);
                 Thread.sleep(1000);
-                log.info("");
-                log.info("Reading data from Cassandra...");
-                log.info("");
-                log.info("Read data from Cassandra");
+                // log.info("");
+                // log.info("Reading data from Cassandra...");
+                // log.info("");
+                // log.info("Read data from Cassandra");
             }
 
         } catch (Exception e) {
