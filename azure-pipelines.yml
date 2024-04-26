@@ -13,6 +13,7 @@ steps:
 
 - script: |
     cd readagent
+    ls
   displayName: moving into directory
 
 - task: Maven@3
