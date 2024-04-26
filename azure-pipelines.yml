@@ -9,6 +9,18 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+parameters:
+  - name: ACCESS_TOKEN
+    type: string
+    default: $(ACCESS_TOKEN)
+
+resources:
+  repositories:
+    - repository: Jfrog
+      type: github
+      name: IsuruGunarathne/Jfrog
+      endpoint: github.com_IsuruGunarathne
+
 steps:
 
 - script: |
@@ -16,13 +28,8 @@ steps:
     ls
   displayName: moving into directory
 
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+- template: sca-jfrog-mvn.yaml@Jfrog
+  parameters:
+    ACCESS_TOKEN: ${{ parameters.ACCESS_TOKEN }}
+    PROJECT_TYPE: mvn
+    INSECURE_TLS: true
