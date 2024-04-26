@@ -10,6 +10,11 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+
+- script: |
+    cd readagent
+  displayName: moving into directory
+
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
