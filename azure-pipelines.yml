@@ -4,7 +4,17 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
 trigger:
-- main
+  branches:
+    exclude:
+      - '*'
+  paths:
+    exclude:
+      - README.md  # Assuming README.md is not modified frequently
+
+pr:
+  branches:
+    include:
+      - '*'
 
 pool:
   vmImage: ubuntu-latest
@@ -19,7 +29,7 @@ resources:
     - repository: Jfrog
       type: github
       name: IsuruGunarathne/Jfrog
-      ref: refs/tags/v1.0
+      ref: refs/tags/v2.1
       endpoint: github.com_IsuruGunarathne
 
 steps:
@@ -34,3 +44,4 @@ steps:
     ACCESS_TOKEN: ${{ parameters.ACCESS_TOKEN }}
     PROJECT_TYPE: mvn
     INSECURE_TLS: true
+    GIT_CONNECTION: github.com_IsuruGunarathne
