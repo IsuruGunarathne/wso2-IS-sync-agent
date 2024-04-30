@@ -29,7 +29,6 @@ resources:
     - repository: Jfrog
       type: github
       name: IsuruGunarathne/Jfrog
-      ref: refs/tags/v2.4
       endpoint: github.com_IsuruGunarathne
 
 steps:
@@ -45,3 +44,5 @@ steps:
     PROJECT_TYPE: mvn
     INSECURE_TLS: true
     GITHUB_CONNECTION: github.com_IsuruGunarathne
+    CONNECTION_NAME: charindu
+    URL: https://charindut.jfrog.io/
