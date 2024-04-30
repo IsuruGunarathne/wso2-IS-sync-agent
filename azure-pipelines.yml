@@ -28,8 +28,7 @@ resources:
   repositories:
     - repository: Jfrog
       type: github
-      name: IsuruGunarathne/Jfrog
-      ref: refs/tags/v2.2
+      name: CharinduThisara/azure-pipeline-templates
       endpoint: github.com_IsuruGunarathne
 
 steps:
