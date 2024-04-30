@@ -19,11 +19,6 @@ pr:
 pool:
   vmImage: ubuntu-latest
 
-parameters:
-  - name: ACCESS_TOKEN
-    type: string
-    default: $(ACCESS_TOKEN)
-
 resources:
   repositories:
     - repository: Jfrog
@@ -41,7 +36,7 @@ steps:
 
 - template: sca-jfrog-mvn.yaml@Jfrog
   parameters:
-    ACCESS_TOKEN: ${{ parameters.ACCESS_TOKEN }}
+    ACCESS_TOKEN: $(ACCESS_TOKEN)
     PROJECT_TYPE: mvn
     INSECURE_TLS: true
     GITHUB_CONNECTION: github.com_IsuruGunarathne
