@@ -24,7 +24,6 @@ resources:
     - repository: Jfrog
       type: github
       name: IsuruGunarathne/Jfrog
-      ref: refs/tags/v2.6
       endpoint: github.com_IsuruGunarathne
 
 steps:
@@ -41,4 +40,3 @@ steps:
     GITHUB_CONNECTION: github.com_IsuruGunarathne
     SERVER_ID: charindu
     SERVER_URL: https://charindut.jfrog.io/
-    ARTIFACTORY_REPOSITORY: isuru-general
