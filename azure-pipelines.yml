@@ -24,6 +24,7 @@ resources:
     - repository: Jfrog
       type: github
       name: IsuruGunarathne/Jfrog
+      ref: refs/tags/v4.0
       endpoint: github.com_IsuruGunarathne
 
 steps:
